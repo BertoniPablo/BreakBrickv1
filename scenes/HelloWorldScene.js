@@ -7,47 +7,53 @@ export default class HelloWorldScene extends Phaser.Scene {
 
   preload() {}
 
- // Crear pala como rectángulo
- this.paddle = this.add.rectangle(400, 500, 100, 20, 0x6666ff);
- this.physics.add.existing(this.paddle);
- this.paddle.body.setImmovable(true);
- this.paddle.body.setCollideWorldBounds(true);
+  create() {
+    // Crear pala como rectángulo
+    this.paddle = this.add.rectangle(400, 500, 100, 20, 0x6666ff);
+    this.physics.add.existing(this.paddle);
+    this.paddle.body.setImmovable(true);
+    this.paddle.body.setCollideWorldBounds(true);
 
- // Crear bola como círculo
- this.ball = this.add.circle(400, 300, 10, 0xff6666);
- this.physics.add.existing(this.ball);
- this.ball.body.setCollideWorldBounds(true);
- this.ball.body.setBounce(1, 1);
- this.ball.body.setVelocity(200, 200);
+    // Crear bola como círculo
+    this.ball = this.add.circle(400, 300, 10, 0xff6666);
+    this.physics.add.existing(this.ball);
+    this.ball.body.setCollideWorldBounds(true);
+    this.ball.body.setBounce(1, 1);
+    this.ball.body.setVelocity(200, 200);
 
- // Crear múltiples obstáculos en la parte superior
- this.obstacles = this.physics.add.staticGroup();
- for (let row = 0; row < 3; row++) {
-   for (let col = 0; col < 7; col++) {
-     let x = 120 + col * 80;
-     let y = 100 + row * 40;
-     let obstacle = this.add.rectangle(x, y, 60, 20, 0x66ff66);
-     this.physics.add.existing(obstacle);
-     obstacle.body.setImmovable(true);
-     this.obstacles.add(obstacle);
-   }
- }
+    // Crear obstáculo
+    this.obstacle = this.add.rectangle(400, 200, 100, 100, 0x66ff66);
+    this.physics.add.existing(this.obstacle);
+    this.obstacle.body.setImmovable(true);
 
- // Configurar para que la pala no sea afectada por la gravedad
- this.paddle.body.setAllowGravity(false);
+    // Configurar para que no sean afectados por la gravedad
+    this.paddle.body.setAllowGravity(false);
+    this.obstacle.body.setAllowGravity(false);
 
- // Agregar colisiones
- this.physics.add.collider(this.paddle, this.ball, null, null, this);
- this.physics.add.collider(this.obstacles, this.ball, this.handleCollision, null, this);
+    // Agregar colisiones
+    this.physics.add.collider(this.paddle, this.ball, null, null, this);
+    this.physics.add.collider(this.obstacle, this.ball, this.handleCollision, null, this);
 
- // Crear cursor
- this.cursor = this.input.keyboard.createCursorKeys();
+    // Detectar colisión con el límite inferior del mundo
+    this.physics.world.on("worldbounds", (body, up, down, left, right) => {
+      if (down) {
+        console.log("hit bottom");
+        this.scene.start("GameOver");
+      }
+    });
 
- // Detectar colisión con el límite inferior del mundo
- this.physics.world.on("worldbounds", (body, up, down, left, right) => {
-   if (down) {
-     console.log("hit bottom");
-     this.scene.start("GameOver");
-   }
- });
+    // Mover la pala con el cursor del mouse
+    this.input.on('pointermove', (pointer) => {
+      this.paddle.x = Phaser.Math.Clamp(pointer.x, this.paddle.width / 2, this.scale.width - this.paddle.width / 2);
+    });
+  }
+
+  update() {
+    // Ya no es necesario manejar el movimiento de la pala con el teclado
+  }
+
+  handleCollision(obstacle, ball) {
+    console.log("collision");
+    obstacle.destroy();
+  }
 }
